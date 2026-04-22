@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - VetConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .chat-container {
+            display: flex;
+            height: calc(100vh - 100px);
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .chat-sidebar {
+            width: 300px;
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+        }
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .contact-item {
+            padding: 15px;
+            border-bottom: 1px solid #f9f9f9;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .contact-item:hover, .contact-item.active {
+            background-color: var(--secondary-color);
+        }
+        .messages-display {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        .message.sent {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .message.received {
+            align-self: flex-start;
+            background: white;
+            border-bottom-left-radius: 2px;
+        }
+        .chat-input {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fas fa-paw"></i> VetConnect</div>
+            <nav class="nav-menu">
+                <li class="nav-item"><a href="#" id="backLink" class="nav-link"><i class="fas fa-arrow-left"></i> Voltar</a></li>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header-top">
+                <h2>Mensagens</h2>
+            </header>
+
+            <div class="chat-container">
+                <div class="chat-sidebar" id="contactList">
+                    <!-- Contatos -->
+                </div>
+                <div class="chat-main">
+                    <div class="messages-display" id="messageList">
+                        <p style="text-align:center; color: #999; margin-top: 50px;">Selecione um contato para iniciar a conversa</p>
+                    </div>
+                    <form class="chat-input" id="chatForm">
+                        <input type="text" id="msgInput" placeholder="Digite sua mensagem..." required>
+                        <button type="submit" class="btn" style="width: auto; border-radius: 50%; width: 45px; height: 45px;"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        const user = checkAuth();
+        let activeContactId = null;
+
+        document.getElementById('backLink').href = user.type === 'tutor' ? 'dashboard-tutor.html' : 'dashboard-vet.html';
+
+        function loadContacts() {
+            const users = DB.getUsers();
+            const contacts = users.filter(u => u.type !== user.type);
+            const list = document.getElementById('contactList');
+
+            list.innerHTML = contacts.map(c => `
+                <div class="contact-item" onclick="selectContact(${c.id})">
+                    <div class="avatar">${c.name.charAt(0)}</div>
+                    <div>
+                        <strong>${c.name}</strong>
+                        <p style="font-size: 0.7rem; color: #999;">${c.type === 'vet' ? 'Veterinário' : 'Tutor'}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectContact(id) {
+            activeContactId = id;
+            document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+            loadMessages();
+        }
+
+        function loadMessages() {
+            if (!activeContactId) return;
+            const allMsgs = DataManager.getMessages();
+            const chatMsgs = allMsgs.filter(m => 
+                (m.from === user.id && m.to === activeContactId) || 
+                (m.from === activeContactId && m.to === user.id)
+            );
+
+            const list = document.getElementById('messageList');
+            if (chatMsgs.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color: #999;">Nenhuma mensagem ainda. Diga oi!</p>';
+            } else {
+                list.innerHTML = chatMsgs.map(m => `
+                    <div class="message ${m.from === user.id ? 'sent' : 'received'}">
+                        ${m.text}
+                    </div>
+                `).join('');
+            }
+            list.scrollTop = list.scrollHeight;
+        }
+
+        document.getElementById('chatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!activeContactId) {
+                alert('Selecione um contato primeiro!');
+                return;
+            }
+            const input = document.getElementById('msgInput');
+            const msg = {
+                from: user.id,
+                to: activeContactId,
+                text: input.value,
+                time: new Date().toISOString()
+            };
+            DataManager.saveMessage(msg);
+            input.value = '';
+            loadMessages();
+        });
+
+        loadContacts();
+        setInterval(loadMessages, 3000); // Simular tempo real
+    </script>
+</body>
+</html>

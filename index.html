@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetConnect - Conectando Saúde e Carinho</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero {
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 0.9)), url('https://images.unsplash.com/photo-1584132967334-10e028bd69f7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            color: white;
+            padding: 20px;
+        }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; }
+        .hero p { font-size: 1.2rem; margin-bottom: 30px; max-width: 600px; }
+        .nav-landing {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            box-shadow: var(--shadow);
+        }
+        .nav-landing .logo { color: var(--primary-color); font-size: 1.5rem; font-weight: bold; }
+        .features { padding: 80px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; text-align: center; }
+        .feature-item i { font-size: 3rem; color: var(--primary-color); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="nav-landing">
+        <div class="logo"><i class="fas fa-paw"></i> VetConnect</div>
+        <div>
+            <a href="login.html" class="btn" style="width: auto; padding: 10px 25px; text-decoration: none;">Entrar</a>
+            <a href="register.html" class="btn" style="width: auto; padding: 10px 25px; text-decoration: none; background: #34495e;">Cadastrar</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Cuidar do seu pet nunca foi tão fácil.</h1>
+            <p>Conectamos você aos melhores veterinários, mantendo todo o histórico de saúde, vacinas e consultas em um só lugar.</p>
+            <a href="register.html" class="btn" style="width: auto; padding: 15px 40px; font-size: 1.2rem; text-decoration: none;">Começar Agora</a>
+        </div>
+    </header>
+
+    <section class="container features">
+        <div class="feature-item">
+            <i class="fas fa-history"></i>
+            <h3>Histórico Completo</h3>
+            <p>Acompanhe cada consulta, exame e evolução da saúde do seu animal.</p>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-syringe"></i>
+            <h3>Controle de Vacinas</h3>
+            <p>Receba lembretes e mantenha a carteira de vacinação sempre em dia.</p>
+        </div>
+        <div class="feature-item">
+            <i class="fas fa-comments"></i>
+            <h3>Chat Direto</h3>
+            <p>Tire dúvidas e receba orientações do seu veterinário em tempo real.</p>
+        </div>
+    </section>
+
+    <footer style="background: #34495e; color: white; padding: 40px 20px; text-align: center;">
+        <p>&copy; 2026 VetConnect - Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>

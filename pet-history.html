@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico do Pet - VetConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            background: var(--primary-color);
+            top: 0; bottom: 0; left: 50%;
+            margin-left: -1px;
+        }
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            background: inherit;
+            width: 50%;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            right: -10px;
+            background-color: white;
+            border: 4px solid var(--primary-color);
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .left { left: 0; }
+        .right { left: 50%; }
+        .right::after { left: -10px; }
+        .timeline-content {
+            padding: 20px;
+            background: white;
+            position: relative;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        .timeline-content h4 { color: var(--primary-color); margin-bottom: 5px; }
+        .timeline-content span { font-size: 0.8rem; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fas fa-paw"></i> VetConnect</div>
+            <nav class="nav-menu">
+                <li class="nav-item"><a href="#" id="backLink" class="nav-link"><i class="fas fa-arrow-left"></i> Voltar</a></li>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header-top">
+                <h2 id="petTitle">Histórico de Saúde</h2>
+            </header>
+
+            <div class="timeline" id="timeline">
+                <!-- Itens da timeline -->
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        const user = checkAuth();
+        const urlParams = new URLSearchParams(window.location.search);
+        const petId = parseInt(urlParams.get('id'));
+        
+        document.getElementById('backLink').href = user.type === 'tutor' ? 'dashboard-tutor.html' : 'dashboard-vet.html';
+
+        function loadTimeline() {
+            const pets = DataManager.getPets();
+            const pet = pets.find(p => p.id === petId);
+            if (!pet) return;
+
+            document.getElementById('petTitle').innerText = `Histórico de ${pet.name}`;
+
+            const apps = DataManager.getAppointmentsByPet(petId);
+            const timeline = document.getElementById('timeline');
+
+            if (apps.length === 0) {
+                timeline.innerHTML = '<p style="text-align:center">Nenhum registro encontrado para este pet.</p>';
+                return;
+            }
+
+            timeline.innerHTML = apps.sort((a,b) => new Date(b.date) - new Date(a.date)).map((app, index) => `
+                <div class="timeline-item ${index % 2 === 0 ? 'left' : 'right'}">
+                    <div class="timeline-content">
+                        <span>${new Date(app.date).toLocaleDateString()}</span>
+                        <h4>${app.type}</h4>
+                        <p>${app.notes}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadTimeline();
+    </script>
+</body>
+</html>

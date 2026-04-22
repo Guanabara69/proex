@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Vet - VetConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .patient-table {
+            width: 100%;
+            background: white;
+            border-radius: var(--border-radius);
+            border-collapse: collapse;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .patient-table th, .patient-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .patient-table th {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: #e1f5fe;
+            color: #039be5;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-user-md"></i> VetConnect
+            </div>
+            <nav class="nav-menu">
+                <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-columns"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-paw"></i> Pacientes</a></li>
+                <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-calendar-check"></i> Consultas do Dia</a></li>
+                <li class="nav-item"><a href="chat.html" class="nav-link"><i class="fas fa-comments"></i> Mensagens</a></li>
+            </nav>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="DB.logout()"><i class="fas fa-sign-out-alt"></i> Sair</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header-top">
+                <h2>Painel do Veterinário</h2>
+                <div class="user-profile">
+                    <span id="userName">Dr. Veterinário</span>
+                    <div class="avatar" id="userInitial">V</div>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Pacientes Ativos</h3>
+                    <div class="value" id="patientCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Consultas Hoje</h3>
+                    <div class="value">4</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Novas Mensagens</h3>
+                    <div class="value">3</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Pacientes Recentes</h3>
+                <button class="btn" style="width: auto; padding: 8px 20px;" onclick="showModal('consultModal')">Nova Consulta</button>
+            </div>
+
+            <table class="patient-table">
+                <thead>
+                    <tr>
+                        <th>Pet</th>
+                        <th>Espécie</th>
+                        <th>Tutor</th>
+                        <th>Última Consulta</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="patientList">
+                    <!-- Pacientes serão carregados aqui -->
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <!-- Modal Nova Consulta -->
+    <div id="consultModal" class="modal">
+        <div class="modal-content">
+            <h3>Registrar Consulta / Vacina</h3>
+            <form id="consultForm">
+                <div class="form-group">
+                    <label>Selecionar Pet</label>
+                    <select id="selectPet" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="consultType">
+                        <option value="Consulta">Consulta Geral</option>
+                        <option value="Vacina">Aplicação de Vacina</option>
+                        <option value="Retorno">Retorno</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observações / Recomendações</label>
+                    <textarea id="consultNotes" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; height: 100px;"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn">Registrar</button>
+                    <button type="button" class="btn" style="background: #95a5a6;" onclick="hideModal('consultModal')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        const user = checkAuth();
+        document.getElementById('userName').innerText = user.name;
+        document.getElementById('userInitial').innerText = user.name.charAt(0).toUpperCase();
+
+        function showModal(id) { 
+            populatePetSelect();
+            document.getElementById(id).style.display = 'flex'; 
+        }
+        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function populatePetSelect() {
+            const pets = DataManager.getPets();
+            const select = document.getElementById('selectPet');
+            select.innerHTML = pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+        }
+
+        function loadPatients() {
+            const pets = DataManager.getPets();
+            const list = document.getElementById('patientList');
+            document.getElementById('patientCount').innerText = pets.length;
+
+            if (pets.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align:center">Nenhum paciente cadastrado no sistema.</td></tr>';
+                return;
+            }
+
+            const users = DB.getUsers();
+
+            list.innerHTML = pets.map(pet => {
+                const tutor = users.find(u => u.id === pet.tutorId);
+                return `
+                    <tr>
+                        <td><strong>${pet.name}</strong></td>
+                        <td>${pet.species}</td>
+                        <td>${tutor ? tutor.name : 'N/A'}</td>
+                        <td>${new Date().toLocaleDateString()}</td>
+                        <td>
+                            <a href="pet-history.html?id=${pet.id}" class="btn btn-sm" style="width:auto; text-decoration:none; display:inline-block; text-align:center;">Ficha</a>
+                            <a href="chat.html" class="btn btn-sm" style="width:auto; background: var(--warning); text-decoration:none; display:inline-block; text-align:center;">Chat</a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('consultForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const app = {
+                id: Date.now(),
+                petId: parseInt(document.getElementById('selectPet').value),
+                vetId: user.id,
+                type: document.getElementById('consultType').value,
+                notes: document.getElementById('consultNotes').value,
+                date: new Date().toISOString()
+            };
+            DataManager.saveAppointment(app);
+            alert('Registro salvo com sucesso!');
+            hideModal('consultModal');
+            loadPatients();
+        });
+
+        loadPatients();
+    </script>
+</body>
+</html>

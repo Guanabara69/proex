@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Tutor - VetConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .pet-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .pet-info h4 { margin: 0; color: var(--primary-color); }
+        .pet-avatar {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-paw"></i> VetConnect
+            </div>
+            <nav class="nav-menu">
+                <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-home"></i> Início</a></li>
+                <li class="nav-item"><a href="#" class="nav-link" onclick="showModal('petModal')"><i class="fas fa-plus-circle"></i> Novo Pet</a></li>
+                <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-calendar-alt"></i> Consultas</a></li>
+                <li class="nav-item"><a href="#" class="nav-link"><i class="fas fa-syringe"></i> Vacinas</a></li>
+                <li class="nav-item"><a href="chat.html" class="nav-link"><i class="fas fa-comments"></i> Chat</a></li>
+            </nav>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="DB.logout()"><i class="fas fa-sign-out-alt"></i> Sair</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header-top">
+                <h2 id="welcomeMsg">Olá, Tutor!</h2>
+                <div class="user-profile">
+                    <span id="userName">Usuário</span>
+                    <div class="avatar" id="userInitial">U</div>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Meus Pets</h3>
+                    <div class="value" id="petCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Próximas Vacinas</h3>
+                    <div class="value">2</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Consultas Agendadas</h3>
+                    <div class="value">1</div>
+                </div>
+            </div>
+
+            <h3>Meus Animais</h3>
+            <div id="petList">
+                <!-- Pets serão carregados aqui -->
+                <p>Você ainda não cadastrou nenhum pet.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Novo Pet -->
+    <div id="petModal" class="modal">
+        <div class="modal-content">
+            <h3>Cadastrar Novo Pet</h3>
+            <form id="petForm">
+                <div class="form-group">
+                    <label>Nome do Pet</label>
+                    <input type="text" id="petName" required>
+                </div>
+                <div class="form-group">
+                    <label>Espécie</label>
+                    <select id="petSpecies">
+                        <option value="Cachorro">Cachorro</option>
+                        <option value="Gato">Gato</option>
+                        <option value="Pássaro">Pássaro</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Raça</label>
+                    <input type="text" id="petBreed">
+                </div>
+                <div class="form-group">
+                    <label>Idade (anos)</label>
+                    <input type="number" id="petAge">
+                </div>
+                <div class="form-group">
+                    <label>Peso (kg)</label>
+                    <input type="number" step="0.1" id="petWeight">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn">Salvar</button>
+                    <button type="button" class="btn" style="background: #95a5a6;" onclick="hideModal('petModal')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        const user = checkAuth();
+        document.getElementById('userName').innerText = user.name;
+        document.getElementById('userInitial').innerText = user.name.charAt(0).toUpperCase();
+        document.getElementById('welcomeMsg').innerText = `Olá, ${user.name.split(' ')[0]}!`;
+
+        function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function loadPets() {
+            const pets = DataManager.getPetsByTutor(user.id);
+            const list = document.getElementById('petList');
+            document.getElementById('petCount').innerText = pets.length;
+
+            if (pets.length === 0) {
+                list.innerHTML = '<p>Você ainda não cadastrou nenhum pet.</p>';
+                return;
+            }
+
+            list.innerHTML = pets.map(pet => `
+                <div class="pet-card">
+                    <div class="pet-avatar"><i class="fas fa-${pet.species === 'Cachorro' ? 'dog' : 'cat'}"></i></div>
+                    <div class="pet-info">
+                        <h4>${pet.name}</h4>
+                        <p>${pet.species} - ${pet.breed} | ${pet.age} anos | ${pet.weight}kg</p>
+                        <div class="action-buttons">
+                            <a href="pet-history.html?id=${pet.id}" class="btn btn-sm" style="text-decoration:none; display:inline-block; text-align:center;">Ver Histórico</a>
+                       <a href="chat.html" class="btn btn-sm" style="width:auto; background: var(--warning); text-decoration:none; display:inline-block; text-align:center;">Chat</a>                     </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('petForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newPet = {
+                id: Date.now(),
+                tutorId: user.id,
+                name: document.getElementById('petName').value,
+                species: document.getElementById('petSpecies').value,
+                breed: document.getElementById('petBreed').value,
+                age: document.getElementById('petAge').value,
+                weight: document.getElementById('petWeight').value
+            };
+            DataManager.savePet(newPet);
+            hideModal('petModal');
+            loadPets();
+            e.target.reset();
+        });
+
+        loadPets();
+    </script>
+</body>
+</html>
